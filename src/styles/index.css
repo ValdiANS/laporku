@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.leaflet-top.leaflet-left {
+  display: none;
+}
+
+.leaflet-grab.add-report-mode {
+  cursor: default;
+}
