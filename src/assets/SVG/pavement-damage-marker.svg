@@ -1,0 +1,30 @@
+<svg width="86" height="158" viewBox="0 0 86 158" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M43 158L5.76091 47L80.2391 47L43 158Z" fill="url(#paint0_linear_199_1476)"/>
+<circle cx="43" cy="38" r="38" fill="#FF5454"/>
+<circle cx="43" cy="38" r="33" fill="white"/>
+<rect x="21.5881" y="43" width="20.9977" height="10" transform="rotate(15 21.5881 43)" fill="black"/>
+<rect x="44.4011" y="48" width="4.14821" height="4.13497" transform="rotate(35.5 44.4011 48)" fill="black"/>
+<rect x="42.6583" y="55" width="2.97614" height="3.16665" transform="rotate(12 42.6583 55)" fill="black"/>
+<rect x="51.1393" y="52.439" width="2.97614" height="3.16665" transform="rotate(-6 51.1393 52.439)" fill="black"/>
+<rect x="48.4508" y="52.7386" width="2.49836" height="2.67535" transform="rotate(41.5 48.4508 52.7386)" fill="black"/>
+<rect x="50.5505" y="57.1506" width="2.49836" height="2.67535" transform="rotate(66.5 50.5505 57.1506)" fill="black"/>
+<rect x="55" y="57" width="1.76211" height="1.86075" transform="rotate(66.5 55 57)" fill="black"/>
+<rect x="58.7064" y="55" width="1.76211" height="1.86075" transform="rotate(66.5 58.7064 55)" fill="black"/>
+<rect x="56.7064" y="60" width="1.76211" height="1.86075" transform="rotate(66.5 56.7064 60)" fill="black"/>
+<ellipse cx="45.8327" cy="16.9752" rx="4.61932" ry="3.97518" fill="black"/>
+<rect width="9.38745" height="14.1555" rx="2" transform="matrix(0.986297 0.164983 -0.220327 0.975426 41.4895 20.9489)" fill="black"/>
+<rect width="4.01722" height="9.83578" rx="2" transform="matrix(0.557134 -0.830423 0.895556 0.44495 46.3239 25.2107)" fill="black"/>
+<rect width="3.81778" height="9.50088" rx="1.90889" transform="matrix(0.752313 0.658806 -0.76357 0.645725 59.1279 20.9489)" fill="black"/>
+<rect width="4.03235" height="9.80376" rx="2" transform="matrix(0.0909377 0.966035 -1.00865 0.183654 43.3979 21.3919)" fill="black"/>
+<rect width="3.81825" height="9.49973" rx="1.90912" transform="matrix(-1.02894 -0.066515 0.193657 -0.948504 35.8999 32.2202)" fill="black"/>
+<rect width="4.09491" height="9.66893" rx="2.04746" transform="matrix(0.361222 -0.868592 0.972347 0.401374 27.871 37.3981)" fill="black"/>
+<rect width="3.82019" height="9.49491" rx="1.9101" transform="matrix(0.860712 0.622169 -0.605722 0.711003 39.3643 32.1921)" fill="black"/>
+<rect width="4.30291" height="9.19073" rx="2.15146" transform="matrix(-0.709473 -0.654725 0.809371 -0.649506 45.0586 46.4515)" fill="black"/>
+<rect width="3.82688" height="9.47831" rx="1.91344" transform="matrix(0.9498 -0.425489 0.495502 0.819121 43.8217 34.3636)" fill="black"/>
+<defs>
+<linearGradient id="paint0_linear_199_1476" x1="43" y1="158" x2="16" y2="3.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FF5454"/>
+<stop offset="1" stop-color="#FF5454" stop-opacity="0"/>
+</linearGradient>
+</defs>
+</svg>
