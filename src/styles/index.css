@@ -9,3 +9,7 @@
 .leaflet-grab.add-report-mode {
   cursor: default;
 }
+
+.leaflet-popup-tip {
+  display: none;
+}
