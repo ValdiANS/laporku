@@ -1,9 +1,13 @@
 <svg width="86" height="158" viewBox="0 0 86 158" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M43 158L5.76091 47L80.2391 47L43 158Z" fill="url(#paint0_linear_199_1511)"/>
+<path d="M43 158L5.76091 47L80.2391 47L43 158Z" fill="url(#paint0_linear_430_2)"/>
 <circle cx="43" cy="38" r="38" fill="#FF5454"/>
 <circle cx="43" cy="38" r="33" fill="white"/>
+<path d="M40.041 56.1002H47.0099V63.3321L43.5912 63.858L40.041 63.3321V56.1002Z" fill="black"/>
+<path d="M43 32.3009L59.4545 56.5604H26.5455L43 32.3009Z" fill="#0B0B0B"/>
+<path d="M43.5907 20.0729L54.9779 44.3324H32.2035L43.5907 20.0729Z" fill="#0B0B0B"/>
+<path d="M43.5255 11L50.9841 29.9167H36.0669L43.5255 11Z" fill="#0B0B0B"/>
 <defs>
-<linearGradient id="paint0_linear_199_1511" x1="43" y1="158" x2="16" y2="3.5" gradientUnits="userSpaceOnUse">
+<linearGradient id="paint0_linear_430_2" x1="43" y1="158" x2="16" y2="3.5" gradientUnits="userSpaceOnUse">
 <stop stop-color="#FF5454"/>
 <stop offset="1" stop-color="#FF5454" stop-opacity="0"/>
 </linearGradient>
