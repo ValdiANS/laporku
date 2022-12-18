@@ -6,7 +6,8 @@ import UserLogin from '../pages/Login';
 import AdminDashboard from '../pages/Admin/Dashboard';
 import AdminLogin from '../pages/Admin/Login';
 import NotFound from '../pages/NotFound';
-import ViewReportSidebar from '../pages/Home/components/ViweReportSidebar';
+import Profile from '../pages/Profile';
+import ViewReportSidebar from '../pages/Home/components/ViewReportSidebar';
 
 const router = createBrowserRouter([
   {
@@ -28,23 +29,18 @@ const router = createBrowserRouter([
         path: 'view/:reportId',
         element: <ViewReportSidebar />,
       },
+
+      {
+        path: 'profile',
+        element: <Profile />,
+      },
     ],
   },
 
   {
     path: '/admin',
-    element: <Navigate to='/admin/dashboard' />,
+    element: <Navigate to='/admin/login' />,
   },
-
-  // {
-  //   path: '/register',
-  //   element: <Register />,
-  // },
-
-  // {
-  //   path: '/login',
-  //   element: <UserLogin />,
-  // },
 
   {
     path: '/admin/login',
