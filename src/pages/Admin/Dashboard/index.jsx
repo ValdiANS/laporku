@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, Navigate } from 'react-router-dom';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
@@ -8,8 +8,12 @@ import { XyzTransition } from '@animxyz/react';
 import AdminDashboardSidebar from './components/AdminDashboardSidebar';
 import markerIcons from '../../../components/LeafletMarkerIcon';
 import CustomMapControl from '../../Home/components/CustomMapControl';
+import MarkerWithPopup from '../../Home/components/MarkerWithPopup';
 
+import { API } from '../../../lib/api';
 import { locationActions } from '../../../store/slice/location-slice';
+import { uiActions } from '../../../store/slice/ui-slice';
+import { reportsActions } from '../../../store/slice/reports-slice';
 
 import Logo from '../../../components/SVG/Logo';
 
@@ -18,43 +22,93 @@ import UserDefaultAvatar from '../../../assets/image/default-avatar.png';
 const AdminDashboard = () => {
   const dispatch = useDispatch();
 
-  const [isViewingInvalidReport, setIsViewingInvalidReport] = useState(false);
+  const [isViewingInvalidReports, setIsViewingInvalidReports] = useState(false);
 
-  const isUserLogin = useSelector((state) => state.user.isLogin);
   const userData = useSelector((state) => state.user.user);
 
-  const upiCibiruCoordinate = useSelector((state) => state.location.upiCibiru);
-  const markersLocation = useSelector((state) => state.location.markers);
+  const reports = useSelector((state) => state.reports.reports);
+  const centerOfTheMap = useSelector((state) => state.location.centerOfTheMap);
   const userLocation = useSelector((state) => state.location.user);
+
+  const [invalidReports, setInvalidReports] = useState([]);
+
+  const deleteLocalInvalidReport = (reportId) => {
+    setInvalidReports((prevInvalidReports) =>
+      prevInvalidReports.filter(
+        (prevInvalidReport) => prevInvalidReport.reportId !== reportId
+      )
+    );
+  };
+
+  const deleteLocalReport = (reportId) => {
+    dispatch(reportsActions.deleteReport(reportId));
+  };
+
+  const getAllInvalidReports = useCallback(async () => {
+    try {
+      const getAllInvalidReportsResponse = await API.GetAllInvalidReports();
+
+      if (!getAllInvalidReportsResponse.response.ok) {
+        throw new Error(getAllInvalidReportsResponse.json.message);
+      }
+
+      setInvalidReports(getAllInvalidReportsResponse.json.data.invalidReports);
+    } catch (error) {
+      console.log('Gagal mendapatkan semua laporan yang tidak valid!');
+      console.log(error.message);
+      console.log(error);
+
+      dispatch(uiActions.showGetInvalidReportsErrorModal());
+    }
+  }, []);
+
+  const init = useCallback(async () => {
+    dispatch(uiActions.setIsLoading(true));
+
+    await getAllInvalidReports();
+
+    dispatch(uiActions.setIsLoading(false));
+  }, []);
+
+  useEffect(() => {
+    init();
+  }, []);
+
+  const deleteReportHandler = (reportId) => {
+    deleteLocalInvalidReport(reportId);
+    deleteLocalReport(reportId);
+  };
 
   const removeUserLocationMarkerClickHandler = () => {
     dispatch(locationActions.removeUserLocation());
   };
 
   const mobileOpenClickHandler = () => {
-    setIsViewingInvalidReport(true);
+    setIsViewingInvalidReports(true);
   };
 
   const mobileCloseClickHandler = () => {
-    setIsViewingInvalidReport(false);
+    setIsViewingInvalidReports(false);
   };
 
   return (
     <Fragment>
-      {/* {!userData.isAdmin && <Navigate to='/admin/login' replace={true} />} */}
+      {!userData.isAdmin && <Navigate to='/admin/login' replace={true} />}
 
       <main className='w-screen h-screen overflow-hidden bg-primaryGradient flex flex-row'>
         {/* Admin Dashboard */}
         <AdminDashboardSidebar
-          show={isViewingInvalidReport}
+          show={isViewingInvalidReports}
+          invalidReports={invalidReports}
+          onDeleteReport={deleteReportHandler}
           onClose={mobileCloseClickHandler}
         />
 
         <div className='w-full h-screen flex sm:block flex-col'>
           <div className='relative w-screen sm:w-full h-full flex-1'>
             <MapContainer
-              center={upiCibiruCoordinate}
-              zoom={17}
+              center={centerOfTheMap}
+              zoom={13}
               scrollWheelZoom={true}
               minZoom={4}
               className='w-screen h-full sm:h-screen z-0 transition-all'
@@ -66,20 +120,19 @@ const AdminDashboard = () => {
                 zoomOffset={-1}
               />
 
-              <Marker position={upiCibiruCoordinate} icon={markerIcons.fire}>
-                <Popup>UPI Cibiru 🔥🔥🔥</Popup>
-              </Marker>
-
-              {markersLocation.map((markerLocation) => (
-                <Marker
-                  key={JSON.stringify(markerLocation.coordinate)}
-                  position={markerLocation.coordinate}
-                  icon={markerIcons.fire}
+              {/* Render Reports Marker */}
+              {reports.map((report) => (
+                <MarkerWithPopup
+                  key={JSON.stringify(report.coordinate)}
+                  reportKey={report.id}
+                  position={report.coordinate}
+                  title={report.title}
+                  icon={markerIcons[report.type]}
                 />
               ))}
 
               {/* Control */}
-              <div className='absolute bottom-8 sm:top-8 right-8 flex flex-col sm:flex-row gap-x-6 gap-y-5'>
+              <div className='absolute bottom-8 sm:top-8 right-8 flex flex-col sm:flex-row-reverse gap-x-6 gap-y-5'>
                 {/* Custom Map Control */}
                 <CustomMapControl show={true} isAdmin={true} />
 
@@ -90,10 +143,10 @@ const AdminDashboard = () => {
                 >
                   <button
                     onClick={mobileOpenClickHandler}
-                    className='block sm:hidden w-full h-fit py-2 px-4 bg-primaryGradient rounded-xl z-[99999] transition-all hover:-translate-y-1 active:translate-y-0 hover:brightness-105'
+                    className='block  w-full h-fit py-5 px-4 bg-primaryGradient rounded-xl z-[99999] transition-all hover:-translate-y-1 active:translate-y-0 hover:brightness-105'
                   >
                     <span className='font-bold text-xl text-white text-center'>
-                      Lihat <br /> Laporan
+                      Lihat Laporan
                     </span>
                   </button>
                 </XyzTransition>
@@ -124,11 +177,13 @@ const AdminDashboard = () => {
               className='item-group'
               xyz='fade left-100%'
             >
-              <div className='absolute top-8 left-8 w-full max-w-[250px]'>
-                <Link to='/'>
-                  <Logo className='w-full max-w-[150px] h-fit sm:max-w-[250px]' />
-                </Link>
-              </div>
+              {!isViewingInvalidReports && (
+                <div className='absolute top-8 left-8 w-full max-w-[250px]'>
+                  <Link to='/'>
+                    <Logo className='w-full max-w-[150px] h-fit sm:max-w-[250px]' />
+                  </Link>
+                </div>
+              )}
             </XyzTransition>
           </div>
 
