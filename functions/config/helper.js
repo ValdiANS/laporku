@@ -1,4 +1,6 @@
-const aesjs = require('aes-js');
+// const aesjs = require('aes-js');
+
+import * as aesjs from 'aes-js';
 
 const encryptTextWithAES = (text = '') => {
   // An example 128-bit key (16 bytes * 8 bits/byte = 128 bits)
