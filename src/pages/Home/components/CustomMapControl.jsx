@@ -1,9 +1,11 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { useMapEvents } from 'react-leaflet';
+import { Link } from 'react-router-dom';
+import { useMap, useMapEvents } from 'react-leaflet';
 
 import { XyzTransition } from '@animxyz/react';
 
 import { locationActions } from '../../../store/slice/location-slice';
+import { uiActions } from '../../../store/slice/ui-slice';
 
 import LoginButton from './LoginButton';
 
@@ -13,15 +15,22 @@ import MyLocationIcon from '../../../components/SVG/MyLocationIcon';
 
 import UserDefaultAvatar from '../../../assets/image/default-avatar.png';
 
-const CustomMapControl = ({ show = true, isAdmin = false }) => {
+const CustomMapControl = ({
+  show = true,
+  isAdmin = false,
+  isAddingReport = false,
+}) => {
   const dispatch = useDispatch();
 
   const isUserLogin = useSelector((state) => state.user.isLogin);
 
-  const map = useMapEvents({
+  let map = useMapEvents({
     locationfound: (e) => {
+      if (isAddingReport) {
+        return;
+      }
+
       console.log('my location found');
-      console.log(e);
 
       dispatch(
         locationActions.setUserLocation({
@@ -32,9 +41,20 @@ const CustomMapControl = ({ show = true, isAdmin = false }) => {
     },
 
     locationerror: (e) => {
+      if (isAddingReport) {
+        return;
+      }
+
       console.log('location error');
+
+      dispatch(uiActions.showGetUserLocationErrorModal());
     },
   });
+
+  // if (isAddingReport) {
+  //   console.log('wow');
+  //   map = '';
+  // }
 
   const zoomInClickHandler = () => {
     map.zoomIn();
@@ -52,11 +72,6 @@ const CustomMapControl = ({ show = true, isAdmin = false }) => {
     console.log('getting my location');
   };
 
-  const profileImageClickHandler = () => {
-    console.log('Profile image clicked');
-    alert('Profile image clicked');
-  };
-
   return (
     <XyzTransition appearVisible className='item-group' xyz='fade right-100%'>
       {show && (
@@ -67,8 +82,8 @@ const CustomMapControl = ({ show = true, isAdmin = false }) => {
             xyz='fade right-100%'
           >
             {isUserLogin && (
-              <button
-                onClick={profileImageClickHandler}
+              <Link
+                to={'/profile'}
                 className='hidden sm:block w-[80px] h-[80px] rounded-full overflow-hidden border-4 border-solid border-primary'
               >
                 <img
@@ -76,7 +91,7 @@ const CustomMapControl = ({ show = true, isAdmin = false }) => {
                   alt="User's Avatar"
                   className='w-full aspect-square object-cover object-center'
                 />
-              </button>
+              </Link>
             )}
           </XyzTransition>
 
