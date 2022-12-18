@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { XyzTransition, XyzTransitionGroup } from '@animxyz/react';
+
+import { API } from '../../../../lib/api';
+import { uiActions } from '../../../../store/slice/ui-slice';
 
 import SidebarLoadingScreen from '../../../../components/SidebarLoadingScreen';
 import InvalidReportCard from './InvalidReportCard';
@@ -8,9 +12,40 @@ import InvalidReportCard from './InvalidReportCard';
 import Logo from '../../../../components/SVG/Logo';
 import CloseCrossIcon from '../../../../components/SVG/CloseCrossIcon';
 
-const AdminDashboardSidebar = ({ show = false, onClose = () => {} }) => {
-  const deleteInvalidReportHandler = (reportId = '') => {
+const AdminDashboardSidebar = ({
+  show = false,
+  invalidReports = [],
+  onClose = () => {},
+  onDeleteReport = (reportId = '') => {},
+}) => {
+  const dispatch = useDispatch();
+
+  const reports = useSelector((state) => state.reports.reports);
+
+  const deleteInvalidReportHandler = async (reportId = '') => {
     // delete invalid report with reportId
+
+    dispatch(uiActions.setIsLoading(true));
+
+    try {
+      const deleteReportResponse = await API.DeleteReport(reportId);
+
+      if (!deleteReportResponse.response.ok) {
+        throw new Error(deleteReportResponse.json.message);
+      }
+
+      onDeleteReport(reportId);
+
+      dispatch(uiActions.showDeleteReportSuccessModal());
+    } catch (error) {
+      console.log('Gagal Menghapus Laporan!');
+      console.log(error.message);
+      console.log(error);
+
+      dispatch(uiActions.showDeleteReportErrorModal());
+    }
+
+    dispatch(uiActions.setIsLoading(false));
   };
 
   return (
@@ -45,19 +80,34 @@ const AdminDashboardSidebar = ({ show = false, onClose = () => {} }) => {
                 xyz='fade left-100% stagger-0.5'
                 className='list-invalid-reports flex flex-col gap-y-4'
               >
-                {new Array(10).fill('').map((item, idx) => (
-                  <div key={idx}>
-                    <InvalidReportCard
-                      title='Jalan Berlubang di Dekat UPI Cibiru'
-                      userName='user123'
-                      reportId={`test${idx + 1}`}
-                      deleteClickHandler={deleteInvalidReportHandler.bind(
-                        null,
-                        `test${idx + 1}`
-                      )}
-                    />
-                  </div>
-                ))}
+                {invalidReports.map((invalidReport) => {
+                  const invalidReportData = reports.find(
+                    (report) => report.id === invalidReport.reportId
+                  );
+
+                  const totalReported = invalidReports.reduce(
+                    (total, currVal) =>
+                      currVal.reportId === invalidReport.reportId
+                        ? total + 1
+                        : total,
+                    0
+                  );
+
+                  return (
+                    <div key={invalidReport.reportId}>
+                      <InvalidReportCard
+                        title={invalidReportData.title}
+                        userName={invalidReportData.uploaderName}
+                        reportId={invalidReport.reportId}
+                        totalReported={totalReported}
+                        deleteClickHandler={deleteInvalidReportHandler.bind(
+                          null,
+                          invalidReport.reportId
+                        )}
+                      />
+                    </div>
+                  );
+                })}
               </XyzTransitionGroup>
             </div>
           </div>
