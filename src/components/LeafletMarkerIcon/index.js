@@ -9,13 +9,13 @@ import waterDamageMarker from './water-damage-marker';
 
 const markerIcons = {
   fire: fireMarker,
-  roadDamage: roadDamageMarker,
-  pavementDamage: pavementDamageMarker,
-  electricityDamage: electricityDamageMarker,
-  environmentDamage: environmentDamageMarker,
-  publicFacilityDamage: publicFacilityDamageMarker,
-  transportationFacilityDamage: transportationFacilityDamageMarker,
-  waterDamage: waterDamageMarker,
+  'road-damage': roadDamageMarker,
+  'pavement-damage': pavementDamageMarker,
+  'electricity-damage': electricityDamageMarker,
+  'environment-damage': environmentDamageMarker,
+  'public-facility-damage': publicFacilityDamageMarker,
+  'transportation-facility-damage': transportationFacilityDamageMarker,
+  'water-damage': waterDamageMarker,
 };
 
 export default markerIcons;
