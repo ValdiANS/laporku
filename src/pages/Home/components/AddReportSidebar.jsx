@@ -1,7 +1,14 @@
-import { useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 
 import { XyzTransition } from '@animxyz/react';
+
+import { API } from '../../../lib/api';
+
+import { locationActions } from '../../../store/slice/location-slice';
+import { uiActions } from '../../../store/slice/ui-slice';
+import { reportsActions } from '../../../store/slice/reports-slice';
 
 import Logo from '../../../components/SVG/Logo';
 import CaretDownIcon from '../../../components/SVG/CaretDownIcon';
@@ -13,17 +20,17 @@ import DefaultAvatar from '../../../assets/image/default-avatar.png';
 const damageReportTypes = [
   {
     name: 'Kerusakan Jalan (Kendaran)',
-    value: 'roadDamage',
+    value: 'road-damage',
   },
 
   {
     name: 'Kerusakan Jalan (Pejalan Kaki)',
-    value: 'pavementDamage',
+    value: 'pavement-damage',
   },
 
   {
     name: 'Kerusakan Lingkungan',
-    value: 'environmentDamage',
+    value: 'environment-damage',
   },
 
   {
@@ -33,26 +40,78 @@ const damageReportTypes = [
 
   {
     name: 'Kerusakan Fasilitas Air',
-    value: 'waterFacilityDamage',
+    value: 'water-damage',
   },
 
   {
     name: 'Kerusakan Kelistrikan',
-    value: 'electricityDamage',
+    value: 'electricity-damage',
   },
 
   {
     name: 'Kerusakan Fasilitas Transportasi',
-    value: 'publicTransportationDamage',
+    value: 'transportation-facility-damage',
   },
 
   {
-    name: 'Kerusakan Fasilitas Umumm',
-    value: 'publicFacilityDamage',
+    name: 'Kerusakan Fasilitas Umum',
+    value: 'public-facility-damage',
   },
 ];
 
+const errorType = {
+  titleEmpty: 'Judul laporan tidak boleh kosong',
+  imageEmpty: 'Gambar laporan tidak boleh kosong',
+  descriptionEmpty: 'Deskripsi laporan tidak boleh kosong',
+};
+
+const checkInputValidity = (title, description, uploadedImg) => {
+  const inputValidity = {
+    valid: true,
+    title: {
+      valid: true,
+      message: '',
+    },
+    description: {
+      valid: true,
+      message: '',
+    },
+    uploadedImg: {
+      valid: true,
+      message: '',
+    },
+  };
+
+  if (title.length === 0) {
+    inputValidity.valid = false;
+    inputValidity.title.valid = false;
+    inputValidity.title.message = errorType.titleEmpty;
+  }
+
+  if (description.length === 0) {
+    inputValidity.valid = false;
+    inputValidity.description.valid = false;
+    inputValidity.description.message = errorType.descriptionEmpty;
+  }
+
+  if (uploadedImg === '') {
+    inputValidity.valid = false;
+    inputValidity.uploadedImg.valid = false;
+    inputValidity.uploadedImg.message = errorType.imageEmpty;
+  }
+
+  return inputValidity;
+};
+
 const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
+  const dispatch = useDispatch();
+
+  const userData = useSelector((state) => state.user.user);
+
+  const selectedAddedReportCoordinate = useSelector(
+    (state) => state.location.selectedLocation
+  );
+
   const [reportTitle, setReportTitle] = useState('');
   const [selectedType, setSelectedType] = useState(damageReportTypes[0].value);
   const [uploadedImg, setUploadedImg] = useState('');
@@ -60,9 +119,50 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
 
   const [imgFileName, setImgFileName] = useState('');
 
-  // console.log(uploadedImg === '' ? uploadedImg : uploadedImg?.files[0]);
+  const [imgReaderResult, setImgReaderResult] = useState('');
 
-  const addReportForm = useRef();
+  // FileReader
+  const reader = new FileReader();
+
+  reader.onload = (e) => {
+    setImgReaderResult(reader.result);
+  };
+
+  const [isTitleValid, setIsTitleValid] = useState({
+    valid: true,
+    message: '',
+  });
+
+  const [isDescriptionValid, setIsDescriptionValid] = useState({
+    valid: true,
+    message: '',
+  });
+
+  const [isUploadedImgValid, setIsUploadedImgValid] = useState({
+    valid: true,
+    message: '',
+  });
+
+  // Get All Reports
+  const getAllReports = useCallback(async () => {
+    try {
+      const getAllReportsResponse = await API.GetAllReports();
+
+      if (!getAllReportsResponse.response.ok) {
+        throw new Error(getAllReportsResponse.json.message);
+      }
+
+      dispatch(
+        reportsActions.setReports(getAllReportsResponse.json.data.reports)
+      );
+    } catch (error) {
+      console.log('Gagal mendapatkan semua laporan!');
+      console.log(error.message);
+      console.log(error);
+
+      dispatch(uiActions.showGetAllReportsErrorModal());
+    }
+  }, []);
 
   const reportTitleChangeHandler = (e) => {
     setReportTitle(e.target.value);
@@ -73,10 +173,6 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
   };
 
   const uploadedImgChangeHandler = (e) => {
-    // console.log(e.target.files[0]);
-
-    console.log(e.target.files);
-
     if (e.target.files.length === 0) {
       setUploadedImg('');
       setImgFileName('');
@@ -86,14 +182,11 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
 
     setUploadedImg(e.target);
     setImgFileName(e.target.files[0].name);
+    reader.readAsDataURL(e.target.files[0]);
   };
 
   const reportDescriptionChangeHandler = (e) => {
     setReportDescription(e.target.value);
-  };
-
-  const addReportSubmitHandler = (e = new SubmitEvent()) => {
-    e.preventDefault();
   };
 
   const addReportResetHandler = () => {
@@ -108,10 +201,77 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
     addReportResetHandler();
 
     onClose();
+
+    dispatch(locationActions.setSelectedLocation([]));
+  };
+
+  const addReportSubmitHandler = async (e = new SubmitEvent()) => {
+    e.preventDefault();
+    dispatch(uiActions.setIsLoading(true));
+
+    const formValidity = checkInputValidity(
+      reportTitle,
+      reportDescription,
+      uploadedImg
+    );
+
+    if (!formValidity.valid) {
+      setIsTitleValid(formValidity.title);
+      setIsDescriptionValid(formValidity.description);
+      setIsUploadedImgValid(formValidity.uploadedImg);
+
+      return;
+    }
+
+    const base64ImgString = imgReaderResult.split(',')[1];
+
+    try {
+      const uploadImgToImgBB = await API.SaveImageToImgBB(base64ImgString);
+
+      const newReportData = {
+        userId: userData.id,
+        uploaderName: userData.name,
+        type: selectedType,
+        coordinate: {
+          lat: selectedAddedReportCoordinate[0],
+          lng: selectedAddedReportCoordinate[1],
+        },
+        title: reportTitle,
+        description: reportDescription,
+        image: {
+          url: uploadImgToImgBB.data.url,
+          delete_url: uploadImgToImgBB.data.delete_url,
+        },
+      };
+
+      // Add Report API
+      const addReportResponse = await API.AddReport(newReportData);
+
+      if (!addReportResponse.response.ok) {
+        throw new Error(
+          JSON.stringify({
+            message: 'Gagal Menambahkan Laporan!',
+            ...addReportResponse.json,
+          })
+        );
+      }
+
+      await getAllReports();
+
+      dispatch(uiActions.showAddReportSuccessModal());
+
+      closeClickHandler();
+    } catch (error) {
+      console.log(error);
+
+      dispatch(uiActions.showAddReportErrorModal());
+    }
+
+    dispatch(uiActions.setIsLoading(false));
   };
 
   return (
-    <XyzTransition appearVisible className='item-group' xyz='fade left-100%'>
+    <XyzTransition appearVisible className='item-gr oup' xyz='fade left-100%'>
       {show && (
         <div className='absolute top-0 left-0 sm:static w-screen h-screen sm:w-[600px] sm:h-auto z-[99999] sm:z-auto'>
           <div className='w-screen sm:w-[600px] p-8 bg-primaryGradient flex flex-col gap-y-8 relative'>
@@ -135,11 +295,12 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
                   <img src={DefaultAvatar} alt="User's Avatar" />
                 </div>
 
-                <h3 className='font-bold text-2xl text-white'>User123</h3>
+                <h3 className='font-bold text-2xl text-white'>
+                  {userData?.name}
+                </h3>
               </div>
 
               <form
-                ref={addReportForm}
                 onSubmit={addReportSubmitHandler}
                 onReset={addReportResetHandler}
                 className='flex flex-col gap-y-5'
@@ -164,20 +325,31 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
                       value={reportTitle}
                       onChange={reportTitleChangeHandler}
                       placeholder='Isi judul laporan di sini...'
-                      className='w-full p-5 rounded-lg'
+                      className={`w-full p-5 rounded-lg border-2 border-solid ${
+                        isTitleValid.valid
+                          ? ''
+                          : 'border-[#FF0000] placeholder:text-[#FF0000]'
+                      }`}
                       autoFocus
                     />
+
+                    {!isTitleValid.valid && (
+                      <small className='block text-base text-[#FF0000]'>
+                        {isTitleValid.message}
+                      </small>
+                    )}
                   </div>
 
                   <div className='flex flex-row gap-x-4 justify-between'>
                     <div className='input-container w-full flex flex-col sm:flex-row gap-x-4 gap-y-4'>
-                      <div className='input w-full flex flex-row relative'>
+                      <div className='input w-full flex flex-row relative flex-grow'>
                         <select
                           name='damageType'
                           id='damageType'
                           className='w-full h-full p-5 pr-12 rounded-lg text-primary cursor-pointer text-ellipsis'
                           onChange={selectDamageReportChangeHandler}
                           value={selectedType}
+                          required
                           title={
                             selectedType === ''
                               ? 'Jenis Kerusakan'
@@ -209,7 +381,7 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
                         <CaretDownIcon className='absolute right-5 top-1/2 -translate-y-1/2' />
                       </div>
 
-                      <div className='input w-full'>
+                      <div className='input w-full flex-grow'>
                         <input
                           type={'file'}
                           name='reportPhoto'
@@ -224,7 +396,13 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
                           className='w-full'
                           title={imgFileName}
                         >
-                          <div className='w-full p-5 rounded-lg bg-white text-primary flex flex-row justify-between items-center gap-x-4 cursor-pointer'>
+                          <div
+                            className={`w-full p-5 rounded-lg bg-white flex flex-row justify-between items-center gap-x-4 cursor-pointer border-2 border-solid ${
+                              isUploadedImgValid.valid
+                                ? 'text-primary'
+                                : 'border-[#FF0000] text-[#FF0000]'
+                            }`}
+                          >
                             <span
                               className='text-ellipsis overflow-hidden w-fit'
                               style={{
@@ -238,11 +416,24 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
                                 : imgFileName}
                             </span>
 
-                            <DownloadIcon className='w-auto h-[30px] sm:h-[40px]' />
+                            <DownloadIcon
+                              className='w-auto h-[30px] sm:h-[40px]'
+                              error={!isUploadedImgValid.valid}
+                            />
                           </div>
                         </label>
                       </div>
                     </div>
+                  </div>
+
+                  <div className='-mt-2 flex flex-row gap-x-4 justify-between'>
+                    <div className='hidden sm:block w-full'></div>
+
+                    {!isUploadedImgValid.valid && (
+                      <small className='w-full block text-base text-[#FF0000]'>
+                        Gambar laporan tidak boleh kosong
+                      </small>
+                    )}
                   </div>
 
                   <div className='input space-y-2'>
@@ -260,8 +451,18 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
                       onChange={reportDescriptionChangeHandler}
                       rows={5}
                       placeholder='Isi deskripsi di sini...'
-                      className='w-full p-5 rounded-lg'
+                      className={`w-full p-5 rounded-lg border-2 border-solid ${
+                        isDescriptionValid.valid
+                          ? ''
+                          : 'border-[#FF0000] placeholder:text-[#FF0000]'
+                      }`}
                     />
+
+                    {!isDescriptionValid.valid && (
+                      <small className='block text-base text-[#FF0000]'>
+                        {isDescriptionValid.message}
+                      </small>
+                    )}
                   </div>
                 </div>
 
