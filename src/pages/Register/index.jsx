@@ -324,7 +324,7 @@ const Register = () => {
                     type='number'
                     name='phoneNumber'
                     id='phoneNumber'
-                    placeholder='Isi nama kamu di sini...'
+                    placeholder='Isi nomor telepon'
                     className='w-full p-5 rounded-lg'
                     inputMode='numeric'
                   />
