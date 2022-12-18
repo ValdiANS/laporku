@@ -6,6 +6,7 @@ const InvalidReportCard = ({
   title = '',
   userName = '',
   reportId = '',
+  totalReported = 0,
   deleteClickHandler = (reportId = '') => {},
 }) => (
   <div className='invalid-report-card w-full px-4 py-6 bg-white rounded-lg flex flex-col justify-between gap-y-4'>
@@ -23,6 +24,7 @@ const InvalidReportCard = ({
       </h3>
 
       <h4 className='text-xl'>{userName}</h4>
+      <p>Total dilaporkan: {totalReported}x</p>
     </div>
 
     <div className='self-end flex flex-row items-center gap-x-4'>
