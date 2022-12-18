@@ -6,14 +6,17 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { XyzTransition } from '@animxyz/react';
 
 import AddReportSidebar from './components/AddReportSidebar';
-import ViewReportSidebar from './components/ViweReportSidebar';
 
 import markerIcons from '../../components/LeafletMarkerIcon/';
-import MapEvents from './components/MapEvents';
+import AddReportMapEvents from './components/AddReportMapEvents';
+
 import AddReportButton from './components/AddReportButton';
 import CustomMapControl from './components/CustomMapControl';
+import MarkerWithPopup from './components/MarkerWithPopup';
+import Modal from '../../components/Modal';
 
 import { locationActions } from '../../store/slice/location-slice';
+import { uiActions } from '../../store/slice/ui-slice';
 
 import Logo from '../../components/SVG/Logo';
 
@@ -25,67 +28,56 @@ const Home = () => {
 
   const isCurrentUrlNotHomePage = location.pathname !== '/';
 
+  // User data
   const isUserLogin = useSelector((state) => state.user.isLogin);
+  const userData = useSelector((state) => state.user.user);
+  const reports = useSelector((state) => state.reports.reports);
 
-  const upiCibiruCoordinate = useSelector((state) => state.location.upiCibiru);
-  const markersLocation = useSelector((state) => state.location.markers);
+  const centerOfTheMap = useSelector((state) => state.location.centerOfTheMap);
   const userLocation = useSelector((state) => state.location.user);
 
   const [isAddingReport, setIsAddingReport] = useState(false);
-  const [isViewingReport, setIsViewingReport] = useState(false);
+  const [showAddReportModal, setShowAddReportModal] = useState(false);
 
-  // console.log(location);
-
-  // console.log(markersLocation);
+  const selectedLocation = useSelector(
+    (state) => state.location.selectedLocation
+  );
 
   const addReportClickHandler = () => {
     setIsAddingReport(true);
+
+    // dispatch(uiActions.showAddReportModal());
+    setShowAddReportModal(true);
   };
 
   const closeAddReportSidebarHandler = () => {
     setIsAddingReport(false);
   };
 
-  const closeViewReportSidebarHandler = () => {
-    setIsViewingReport(false);
-  };
-
   const removeUserLocationMarkerClickHandler = () => {
     dispatch(locationActions.removeUserLocation());
+  };
+
+  const selectLocationMapEventsHandler = (lat = 0, lng = 0) => {
+    dispatch(locationActions.setSelectedLocation([lat, lng]));
+    setShowAddReportModal(false);
   };
 
   return (
     <main className='w-screen h-screen overflow-hidden bg-primaryGradient flex flex-row'>
       <Outlet />
 
-      {/* Modal */}
-      <XyzTransition appearVisible className='item-group' xyz='fade down-100%'>
-        <div className='z-[99999]'>
-          <div className='absolute top-0 left-0 w-screen h-screen grid place-items-center'>
-            <div className='modal-container px-4 py-8 bg-white/60 rounded-lg border-2 border-solid border-[#626262] backdrop-blur-sm flex flex-col justify-center items-center gap-y-8'>
-              <h2 className='font-bold text-3xl text-primary text-center'>
-                Laporan Berhasil Ditambahkan
-              </h2>
-
-              <button className='px-14 py-3 bg-[#626262] font-bold text-xl text-[#F7F7F7] text-center rounded-lg transition-all hover:-translate-y-1 active:translate-y-0 hover:brightness-125'>
-                Tutup
-              </button>
-            </div>
-          </div>
-        </div>
-      </XyzTransition>
-
       {/* Add Report Sidebar */}
       <AddReportSidebar
-        show={isAddingReport}
+        show={isAddingReport && selectedLocation.length !== 0}
         onClose={closeAddReportSidebarHandler}
       />
 
       <div className='w-full h-screen flex sm:block flex-col'>
-        <div className='relative w-screen sm:w-full h-full flex-1'>
+        <div className='w-screen sm:w-full h-full sm:h-screen flex-1'>
           <MapContainer
-            center={upiCibiruCoordinate}
-            zoom={17}
+            center={centerOfTheMap}
+            zoom={13}
             scrollWheelZoom={true}
             minZoom={4}
             className={`${
@@ -99,18 +91,25 @@ const Home = () => {
               zoomOffset={-1}
             />
 
-            <Marker position={upiCibiruCoordinate} icon={markerIcons.fire}>
-              <Popup>UPI Cibiru 🔥🔥🔥</Popup>
-            </Marker>
+            {/* Add Report Map Events */}
+            {isAddingReport && selectedLocation.length === 0 && (
+              <AddReportMapEvents
+                onSelectLocation={selectLocationMapEventsHandler}
+              />
+            )}
 
-            {/* Add Map Events */}
-            {/* <MapEvents /> */}
+            {isAddingReport && selectedLocation.length !== 0 && (
+              <Marker position={selectedLocation}></Marker>
+            )}
 
-            {markersLocation.map((markerLocation) => (
-              <Marker
-                key={JSON.stringify(markerLocation.coordinate)}
-                position={markerLocation.coordinate}
-                icon={markerIcons.fire}
+            {/* Render Reports Marker */}
+            {reports.map((report) => (
+              <MarkerWithPopup
+                key={JSON.stringify(report.coordinate)}
+                reportKey={report.id}
+                position={report.coordinate}
+                title={report.title}
+                icon={markerIcons[report.type]}
               />
             ))}
 
@@ -123,8 +122,19 @@ const Home = () => {
               />
 
               {/* Custom Map Control */}
-              <CustomMapControl show={!isAddingReport} />
+              <CustomMapControl
+                show={!isAddingReport}
+                isAddingReport={isAddingReport}
+              />
             </div>
+
+            {/* Modal When Adding Report */}
+            <Modal
+              show={showAddReportModal}
+              type={'addReport'}
+              isAddingReport={isAddingReport}
+              onSelectLocation={selectLocationMapEventsHandler}
+            />
 
             {/* Marker on user location */}
             {userLocation.length !== 0 && (
@@ -151,21 +161,19 @@ const Home = () => {
             className='item-group'
             xyz='fade left-100%'
           >
-            {!isAddingReport &&
-              !isViewingReport &&
-              !isCurrentUrlNotHomePage && (
-                <div className='absolute top-8 left-8 w-full max-w-[250px]'>
-                  <Link to='/'>
-                    <Logo className='w-full max-w-[150px] h-fit sm:max-w-[250px]' />
-                  </Link>
-                </div>
-              )}
+            {!isAddingReport && !isCurrentUrlNotHomePage && (
+              <div className='absolute top-8 left-8 w-full max-w-[250px]'>
+                <Link to='/'>
+                  <Logo className='w-full max-w-[150px] h-fit sm:max-w-[250px]' />
+                </Link>
+              </div>
+            )}
           </XyzTransition>
         </div>
 
-        <button
-          onClick={() => {}}
-          className='flex-0 px-8 py-4 bg-primaryGradient'
+        <Link
+          to={'/profile'}
+          className='flex-none px-8 py-4 bg-primaryGradient'
         >
           <div className='flex flex-row items-center gap-x-4'>
             <div className='w-[60px] h-[60px] rounded-full overflow-hidden border-4 border-solid border-primary'>
@@ -176,9 +184,11 @@ const Home = () => {
               />
             </div>
 
-            <p className='font-bold text-xl text-white'>User123</p>
+            <p className='font-bold text-xl text-white'>
+              {userData?.name || 'Guest'}
+            </p>
           </div>
-        </button>
+        </Link>
       </div>
     </main>
   );
