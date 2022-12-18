@@ -1,42 +1,20 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const locationInitialState = {
-  /*
-   markers: [
-    {
-      caption: '',
-      coordinate: [lat, lng],
-    }
-   ]
-  */
-  markers: [],
-
   upiCibiru: [-6.939952832600759, 107.72534072399141],
+  bandung: [-6.920292, 107.618637],
 
   user: [], // -> [lat, lng]
+
+  centerOfTheMap: [-6.920292, 107.618637], // -> [lat, lng]
+
+  selectedLocation: [],
 };
 
 const locationSlice = createSlice({
   name: 'location',
   initialState: locationInitialState,
   reducers: {
-    addMarker(state, action) {
-      /*
-        action: {
-          payload: {         
-            caption: '',
-            lat: lat,
-            lng: lng,
-          }
-        }
-      */
-
-      state.markers.push({
-        caption: action.payload.caption,
-        coordinate: [action.payload.lat, action.payload.lng],
-      });
-    },
-
     setUserLocation(state, actions) {
       /*
         action: {
@@ -52,6 +30,10 @@ const locationSlice = createSlice({
 
     removeUserLocation(state) {
       state.user = [];
+    },
+
+    setSelectedLocation(state, action) {
+      state.selectedLocation = action.payload;
     },
   },
 });
