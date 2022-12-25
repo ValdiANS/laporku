@@ -220,6 +220,8 @@ const AddReportSidebar = ({ show = false, onClose = () => {} }) => {
       setIsDescriptionValid(formValidity.description);
       setIsUploadedImgValid(formValidity.uploadedImg);
 
+      dispatch(uiActions.setIsLoading(false));
+
       return;
     }
 
